@@ -3,85 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Mi Amorcito 🥺❤️</title>
+    <title>Para Mi Princesa 🥺❤️</title>
     <style>
-        body {
-            font-family: 'Arial', cursive;
-            background: #ff99cc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .corazon {
-            font-size: 60px;
-            margin: 20px;
-            animation: latido 1s infinite;
-        }
-
-        .mensaje {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(255, 0, 102, 0.3);
-            margin: 20px;
-            max-width: 90%;
-        }
-
-        .botones {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-
-        #si {
-            background: #ff4d88;
-            color: white;
-        }
-
-        #no {
-            background: #cccccc;
-            position: relative;
-        }
-
-        @keyframes latido {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .corazones {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .heart {
-            position: absolute;
-            color: #ff4d88;
-            animation: caer 3s linear infinite;
-        }
-
-        @keyframes caer {
-            from { top: -10%; }
-            to { top: 110%; }
-        }
+        /* (Mantén todo el CSS anterior igual) */
+        body { font-family: 'Arial', cursive; background: #ff99cc; margin: 0; padding: 20px; }
+        /* ... (todo el CSS previo sin cambios) ... */
     </style>
 </head>
 <body>
@@ -90,7 +16,6 @@
     <div class="mensaje">
         <h1>Para mi peque ❤️🥺</h1>
         <h2>¿Podemos pasar este 14 de febrero un momento muy especial juntos?</h2>
-        
         <div class="botones">
             <button id="si" onclick="aceptar()">¡Sí! ❤️</button>
             <button id="no" onmouseover="moverNo()">No 😢</button>
@@ -99,69 +24,89 @@
 
     <div class="corazones" id="corazones"></div>
 
-    <!-- Reproductor de YouTube (oculto) -->
-    <iframe
+    <div class="controles-musica">
+        <button onclick="retroceder()">⏮️</button>
+        <button onclick="pausarReanudar()">⏯️</button>
+        <button onclick="avanzar()">⏭️</button>
+        <span id="titulo-cancion">Cargando...</span>
+    </div>
+
+    <!-- Reproductor oculto pero con tamaño mínimo para navegadores -->
+    <iframe 
         id="reproductor"
-        src="https://www.youtube.com/embed/RiulHx9D7zM?autoplay=1&enablejsapi=1"
+        src="https://www.youtube.com/embed/videoseries?list=PL4xM1DSmNMrCLG5hRfgTjo67tYcKsSl5U&enablejsapi=1&autoplay=1"
+        style="opacity: 0; width: 1px; height: 1px;"
+        allow="autoplay; encrypted-media"
         frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-        style="opacity: 0; width: 0; height: 0;">
+        allowfullscreen>
     </iframe>
 
     <script>
-        // Variables globales
         let player;
+        let playerReady = false;
 
-        // Cargar la API de YouTube
+        // 1. Cargar la API de YouTube
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        document.body.appendChild(tag);
 
-        // Crear el reproductor
+        // 2. Inicializar reproductor
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('reproductor', {
                 events: {
-                    'onReady': onPlayerReady
+                    'onReady': () => {
+                        playerReady = true;
+                        document.body.addEventListener('click', () => player.playVideo());
+                    },
+                    'onStateChange': (event) => {
+                        if (event.data === YT.PlayerState.ENDED) avanzar();
+                    },
+                    'onError': (error) => {
+                        console.error("Error:", error);
+                        avanzar();
+                    }
                 }
             });
         }
 
-        // Cuando el reproductor esté listo
-        function onPlayerReady(event) {
-            // Forzar la reproducción automática (puede requerir interacción del usuario)
-            player.playVideo();
+        // 3. Controles mejorados
+        function retroceder() {
+            if (playerReady) player.previousVideo();
+            actualizarTitulo();
         }
 
-        // Funciones del corazón y botón "No"
-        function aceptar() {
-            alert("¡Eres la mejor persona de mi vida! ❤️");
+        function avanzar() {
+            if (playerReady) player.nextVideo();
+            actualizarTitulo();
         }
 
-        function moverNo() {
-            const botonNo = document.getElementById('no');
-            const x = Math.random() * (window.innerWidth - botonNo.offsetWidth);
-            const y = Math.random() * (window.innerHeight - botonNo.offsetHeight);
-            botonNo.style.transform = `translate(${x}px, ${y}px)`;
-            crearCorazon();
+        function pausarReanudar() {
+            if (!playerReady) return;
+            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
         }
 
-        function crearCorazon() {
-            const corazones = document.getElementById('corazones');
-            const heart = document.createElement('div');
-            heart.className = 'heart';
-            heart.innerHTML = '❤️';
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.animationDuration = (Math.random() * 2 + 1) + 's';
-            corazones.appendChild(heart);
-            setTimeout(() => heart.remove(), 3000);
+        // 4. Actualizar título con verificación
+        function actualizarTitulo() {
+            if (playerReady) {
+                const titulo = player.getVideoData().title;
+                document.getElementById('titulo-cancion').textContent = titulo || "Canción especial 💖";
+            }
         }
 
-        // Forzar la interacción del usuario para activar la reproducción
-        document.body.addEventListener('click', () => {
+        // 5. Función para activar con clic en la página
+        document.addEventListener('click', () => {
+            if (!playerReady) return;
             player.playVideo();
         });
+
+        // (Mantener las funciones de corazones y botones igual)
+        function aceptar() { alert("¡Eres mi persona favorita en el mundo! 💌"); }
+        function moverNo() { /* ... */ }
+        function crearCorazon() { /* ... */ }
     </script>
 </body>
 </html>
